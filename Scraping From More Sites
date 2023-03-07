@@ -1,0 +1,71 @@
+using System;
+using System.Net;
+using System.Collections;
+using HtmlAgilityPack;
+
+namespace WebScrape
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            // Initialize the WebClient and WebRequest
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+            Console.WriteLine("input location");
+            string userlocation = Console.ReadLine();
+            try
+            {
+                userlocation.ToLower();
+                string htmlCode = client.DownloadString($"https://www.iqair.com/uk/england/{userlocation}");
+               
+                HtmlDocument doc = new HtmlDocument();
+                doc.LoadHtml(htmlCode);
+                var w_and_aq = doc.DocumentNode.SelectSingleNode("//table[@class='aqi-forecast__weekly-forecast-table']").InnerText;
+                w_and_aq = w_and_aq.Replace("km/h", "km/h\n").Replace("&nbsp", " ").Replace(";", " ").Replace("Today", "Today ").Replace("Wind", "Wind\n ").Replace(",", "").Replace("°", "° ").Replace("I","I ").Replace("%","% ");
+                string[] data = w_and_aq.Split("\n");
+                var headings = new[] {"Day","Pollution level","Weather","Temperature"};
+                var days = new[] {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",};
+               
+                for (int i = 0; i < data.Count(); i++)
+                {
+                   
+                    foreach (var heading in headings)
+                    {
+                        data[i] = data[i].Replace(heading, heading+" ");
+
+                       
+                    }
+
+                    for (int x = 0; x < data[i].Length; x++)
+                    {
+                        if (data[i][x].ToString() == ("G"))
+                        {
+                            data[i] = (data[i].Insert(x, " "));
+                            x += 1;
+                       
+                        }    
+                       
+
+                    }
+                       
+                   
+
+                    Console.WriteLine(data[i]);  
+                }
+       
+
+
+
+            }
+            catch (Exception e)
+            {
+
+                Console.WriteLine(e);
+            }
+
+
+       
+        }
+    }
+}
