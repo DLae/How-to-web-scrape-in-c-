@@ -25,16 +25,17 @@ namespace webscraping_in_wpf
     {
 
         Dictionary<string, string> locDict = new Dictionary<string, string>()
-            {
-                {"Leeds", "https://weather.com/en-GB/weather/today/l/0ea58c060f0f6522c01d626fde93ab4bff38410da8de58c9068e373327d128e91bdb47028a98b93188526f6bdecc918c" },
-                {"London", "https://weather.com/en-GB/weather/today/l/ae8230efd4bc57fdf721a02c7eb2b88c56aa6e71d73666328e33af3ea2039032132e24ae91b6a07862c5091a9d95a4b8" },
-                {"Bradford", "https://weather.com/en-GB/weather/today/l/d4cf9b9e724967a83481cb985ff8f16904002b9b70facecd777a5e81609b48988df90d8a074ade0a095f25d46c691e8a" },
-                {"Manchester", "https://weather.com/en-GB/weather/today/l/abd9e0d010c86785afe73593d2743297dce23ce3cf7c7a89c76410d6812085dc09504e129ceaca0f776aca293df8061" },
-                {"Sheffield", "https://weather.com/en-GB/weather/today/l/d41b9b5f3dba160c301a98ddf2a0bf6b39861df342cf7c94f704aa76677f2316596a699a691d83dccc6faae4d46665a7" },
-                {"Birmingham", "https://weather.com/en-GB/weather/today/l/74d3ef23c255b3c569ef5be6914b31e94000d796f2118d8eba492946e93afe0ceb0a5f8a9ed095c44db7867780433ee3" },
-                {"Glasgow", "https://weather.com/en-GB/weather/today/l/a3ed29f71655de6e47cae09c7c750f97da92e27f3b800ef82fe1313676bff662195a2a6535ddd31d26fa3d2c86b1dc1f" },
-                {"Edinburgh", "https://weather.com/en-GB/weather/today/l/c13d051d251ac70a95317129deb4f474d5e71b4520af9d2aab6758a684b5f7a9138c7c29eb67bccf16cc7d12418aaa2e" }
-            };
+        {
+            {"Leeds", "https://weather.com/en-GB/weather/today/l/0ea58c060f0f6522c01d626fde93ab4bff38410da8de58c9068e373327d128e91bdb47028a98b93188526f6bdecc918c" },
+            {"London", "https://weather.com/en-GB/weather/today/l/ae8230efd4bc57fdf721a02c7eb2b88c56aa6e71d73666328e33af3ea2039032132e24ae91b6a07862c5091a9d95a4b8" },
+            {"Bradford", "https://weather.com/en-GB/weather/today/l/d4cf9b9e724967a83481cb985ff8f16904002b9b70facecd777a5e81609b48988df90d8a074ade0a095f25d46c691e8a" },
+            {"Manchester", "https://weather.com/en-GB/weather/today/l/abd9e0d010c86785afe73593d2743297dce23ce3cf7c7a89c76410d6812085dc09504e129ceaca0f776aca293df8061" },
+            {"Sheffield", "https://weather.com/en-GB/weather/today/l/d41b9b5f3dba160c301a98ddf2a0bf6b39861df342cf7c94f704aa76677f2316596a699a691d83dccc6faae4d46665a7" },
+            {"Birmingham", "https://weather.com/en-GB/weather/today/l/74d3ef23c255b3c569ef5be6914b31e94000d796f2118d8eba492946e93afe0ceb0a5f8a9ed095c44db7867780433ee3" },
+            {"Glasgow", "https://weather.com/en-GB/weather/today/l/a3ed29f71655de6e47cae09c7c750f97da92e27f3b800ef82fe1313676bff662195a2a6535ddd31d26fa3d2c86b1dc1f" },
+            {"Edinburgh", "https://weather.com/en-GB/weather/today/l/c13d051d251ac70a95317129deb4f474d5e71b4520af9d2aab6758a684b5f7a9138c7c29eb67bccf16cc7d12418aaa2e" },
+            {"Szczecin", "https://weather.com/en-GB/weather/today/l/4bb2170beefd39564b5c8e62005678d9e9826ec700418193a170e148a76face9"}
+        };
 
 
         public MainWindow()
@@ -161,12 +162,15 @@ namespace webscraping_in_wpf
 
             var alert = doc.DocumentNode.SelectSingleNode("//div[@class='CurrentConditions--messaging--3rN-a']");
             string alertDay = alert.InnerText;
-            string alertFirst = alertDay.Substring(0, 5);
-            string alertSecond = alertDay.Substring(5, 5);
-            string alertThird = alertDay.Substring(10, 1);
-            string alertFourth = alertDay.Substring(11);
-            string result4 = alertFirst + " " + alertSecond + " " + alertThird + " " + alertFourth;
-            fivedays_blk.Text += result4;
+            if (alertDay.Length != 0)
+            {
+                string alertFirst = alertDay.Substring(0, 5);
+                string alertSecond = alertDay.Substring(5, 5);
+                string alertThird = alertDay.Substring(10, 1);
+                string alertFourth = alertDay.Substring(11);
+                string result4 = alertFirst + " " + alertSecond + " " + alertThird + " " + alertFourth;
+                fivedays_blk.Text += result4;
+            }
         }
 
         private void GetAirQuality(string linkChoice)
