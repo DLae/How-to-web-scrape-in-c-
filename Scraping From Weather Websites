@@ -1,6 +1,7 @@
-using HtmlAgilityPack; // dont forget to use this package, make sure to install it
+using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -22,116 +23,134 @@ namespace webscraping_in_wpf
     /// </summary>
     public partial class MainWindow : Window
     {
+
+        Dictionary<string, string> locDict = new Dictionary<string, string>()
+            {
+                {"Leeds", "https://weather.com/en-GB/weather/today/l/0ea58c060f0f6522c01d626fde93ab4bff38410da8de58c9068e373327d128e91bdb47028a98b93188526f6bdecc918c" },
+                {"London", "https://weather.com/en-GB/weather/today/l/ae8230efd4bc57fdf721a02c7eb2b88c56aa6e71d73666328e33af3ea2039032132e24ae91b6a07862c5091a9d95a4b8" },
+                {"Bradford", "https://weather.com/en-GB/weather/today/l/d4cf9b9e724967a83481cb985ff8f16904002b9b70facecd777a5e81609b48988df90d8a074ade0a095f25d46c691e8a" },
+                {"Manchester", "https://weather.com/en-GB/weather/today/l/abd9e0d010c86785afe73593d2743297dce23ce3cf7c7a89c76410d6812085dc09504e129ceaca0f776aca293df8061" },
+                {"Sheffield", "https://weather.com/en-GB/weather/today/l/d41b9b5f3dba160c301a98ddf2a0bf6b39861df342cf7c94f704aa76677f2316596a699a691d83dccc6faae4d46665a7" },
+                {"Birmingham", "https://weather.com/en-GB/weather/today/l/74d3ef23c255b3c569ef5be6914b31e94000d796f2118d8eba492946e93afe0ceb0a5f8a9ed095c44db7867780433ee3" },
+                {"Glasgow", "https://weather.com/en-GB/weather/today/l/a3ed29f71655de6e47cae09c7c750f97da92e27f3b800ef82fe1313676bff662195a2a6535ddd31d26fa3d2c86b1dc1f" },
+                {"Edinburgh", "https://weather.com/en-GB/weather/today/l/c13d051d251ac70a95317129deb4f474d5e71b4520af9d2aab6758a684b5f7a9138c7c29eb67bccf16cc7d12418aaa2e" }
+            };
+
+
         public MainWindow()
         {
             InitializeComponent();
-            GetTtemp();   // this one gets today's temperature
-            GetHiLoTemp();    // this one gets the highest and the lowest temperature of the day
-            GetWindInfo();    // this one gets the wind speed currently
-            GetDaysFore();    // this one gets a 5 day forecast
-            GetAirQuality();  // this one gets the air quality at the current time
+
+            foreach (string item in locDict.Keys)
+            {
+                locSelect.Items.Add(item);
+            }
+
         }
 
-
-
-        private void GetTtemp()
+        private void GetTtemp(string linkChoice)
         {
-            WebClient client = new WebClient();
-            client.Encoding = System.Text.Encoding.UTF8;    // dont worry about this being obsolete, it just works so we are rolling with it
+            string linkUse = linkChoice;
 
-            string htmlCode = client.DownloadString("https://weather.com/en-GB/weather/today/l/0ea58c060f0f6522c01d626fde93ab4bff38410da8de58c9068e373327d128e91bdb47028a98b93188526f6bdecc918c");
-            // downloading the html code from the website that we are web scraping from
-            HtmlDocument doc = new HtmlDocument();
-            doc.LoadHtml(htmlCode);   // this is how we load the html code
-
-            var temperature = doc.DocumentNode.SelectSingleNode("//span[@class='CurrentConditions--tempValue--MHmYY']");    // getting the current temperature
-            var location = doc.DocumentNode.SelectSingleNode("//h1[@class='CurrentConditions--location--1YWj_']");          // getting the current location selected by the user
-
-            wthrTdy_blk.Text = $"The temperature in {location.InnerText} is {temperature.InnerText}C";    // this line adds the information to a text block to show them
-        }
-
-
-
-        private void GetHiLoTemp()
-        {
             WebClient client = new WebClient();
             client.Encoding = System.Text.Encoding.UTF8;
 
-            string htmlCode = client.DownloadString("https://weather.com/en-GB/weather/today/l/0ea58c060f0f6522c01d626fde93ab4bff38410da8de58c9068e373327d128e91bdb47028a98b93188526f6bdecc918c");
+            string htmlCode = client.DownloadString(linkUse);
 
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(htmlCode);
-            // using the same 5 lines of code from the other subroutine to get the html code of the main page of the website
-            var bothtemps = doc.DocumentNode.SelectSingleNode("//div[@class='WeatherDetailsListItem--wxData--kK35q']");   // this line gets the highest and the lowest temperature from the html code
+
+            var temperature = doc.DocumentNode.SelectSingleNode("//span[@class='CurrentConditions--tempValue--MHmYY']");
+            var location = doc.DocumentNode.SelectSingleNode("//h1[@class='CurrentConditions--location--1YWj_']");
+
+            wthrTdy_blk.Text = $"The temperature in {location.InnerText} is {temperature.InnerText}C";
+        }
+
+        private void GetHiLoTemp(string linkChoice)
+        {
+            string linkUse = linkChoice;
+
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+
+            string htmlCode = client.DownloadString(linkUse);
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(htmlCode);
+
+            var bothtemps = doc.DocumentNode.SelectSingleNode("//div[@class='WeatherDetailsListItem--wxData--kK35q']");
             string temp = bothtemps.InnerText;
-            string lowtemp = temp.Substring(temp.Length - 2); // this gets the final 2 characters of the string which is the lowest temperature
-            string hightemp = temp.Substring(0,2);            // this gets the first 2 characters of the string which contains the highest temperature
+            string lowtemp = temp.Substring(temp.Length - 2);
+            string hightemp = temp.Substring(0,2);
 
             HiLo_blk.Text = $"High: {hightemp}C     Low: {lowtemp}C";
         }
 
-        private void GetWindInfo()
+        private void GetWindInfo(string linkChoice)
         {
+            string linkUse = linkChoice;
+
             WebClient client = new WebClient();
             client.Encoding = System.Text.Encoding.UTF8;
 
-            string htmlCode = client.DownloadString("https://weather.com/en-GB/weather/today/l/0ea58c060f0f6522c01d626fde93ab4bff38410da8de58c9068e373327d128e91bdb47028a98b93188526f6bdecc918c");
+            string htmlCode = client.DownloadString(linkUse);
 
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(htmlCode);
-            // using the same 5 lines of code from the other subroutine to get the html code of the main page of the website
+
             var windy = doc.DocumentNode.SelectSingleNode("//span[@data-testid='Wind']");
             string windtemp = windy.InnerText;
-            string windspeed = windtemp.Substring(windtemp.Length - 6);   // these lines of code get the current wind speed and direction 
-            List<char> word = new List<char>(); 
+            string windspeed = windtemp.Substring(windtemp.Length - 6);
+            List<char> word = new List<char>();
             foreach (char item in windspeed)
             {
-                word.Add(item);     // each letter from the string needs to be added to the list so we can remove certain characters from it
+                word.Add(item);
             }
             for (int i = 0; i < word.Count; i++)
             {
                 if (word[i].ToString() == "n")
                 {
-                    windspeed = windspeed.Replace("n", "");   // if this condition is met then the letter n is removed from the wind speed so it is in the correct format
+                    windspeed = windspeed.Replace("n", "");
                     break;
                 }
             }
-            windInfo_blk.Text = $"Wind Speed: {windspeed}";   // this displays the current wind speed in miles per hour
+            windInfo_blk.Text = $"Wind Speed: {windspeed}";
         }
 
-        private void GetDaysFore()
+        private void GetDaysFore(string linkChoice)
         {
+            string linkUse = linkChoice;
+
             WebClient client = new WebClient();
             client.Encoding = System.Text.Encoding.UTF8;
 
-            string htmlCode = client.DownloadString("https://weather.com/en-GB/weather/today/l/0ea58c060f0f6522c01d626fde93ab4bff38410da8de58c9068e373327d128e91bdb47028a98b93188526f6bdecc918c");
+            string htmlCode = client.DownloadString(linkUse);
 
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(htmlCode);
-            // using the same 5 lines of code from the other subroutine to get the html code of the main page of the website
+
             var fivedays = doc.DocumentNode.SelectSingleNode("//div[@class='DailyWeatherCard--TableWrapper--2bB37']");
-            string fdaystemp = fivedays.InnerText;  // these 2 lines of code get the table for the next 5 day forecast which include, the highest and lowest temps and the chance of rain for the day
-            string fdays = fdaystemp.Replace("%", "%\n").Replace("°", "° ");    // this adds a new line in between each % sign and a space after each degree symbol so that its easier to read
-            string[] test = fdays.Split("\n");    // the string is split into smaller strings, by the new line character, and added to a list
+            string fdaystemp = fivedays.InnerText;
+            string fdays = fdaystemp.Replace("%", "%\n").Replace("°", "° ");
+            string[] test = fdays.Split("\n");
 
             for (int i = 0; i < 5; i++)
             {
                 int start = test[i].LastIndexOf("°") + "°".Length;
-                int end = test[i].IndexOf("Chance", start);         // these lines remove the "Mostly sunny" aspect of the strings as it isnt needed necessarily however it can always be added back
-                string result = test[i].Remove(start, end - start).Replace("Rain", "Rain ");    // with a string variable = start + end
-                
+                int end = test[i].IndexOf("Chance", start);
+                string result = test[i].Remove(start, end - start).Replace("Rain", "Rain ");
                 string placeholder = result.Substring(0,5);
 
-                if (placeholder == "Today")     // this if statement checks to see if the placeholder is today so that spaces can be added where they are needed to make it easier to read
+                if (placeholder == "Today")
                 {
                     string result2 = result.Replace("Today", "Today ");
                     string result3 = result2.Replace("Chance", " Chance");
-                    fivedays_blk.Text += result3;   // once the spaces have been added then its added to a text block to be displayed to the user
+                    fivedays_blk.Text += result3;
                     fivedays_blk.Text += "\n";
                 }
-                else    // if the if statement isnt triggered then this runs in place of it as today isnt seen within the string
+                else
                 {
-                    string firstH = result.Substring(0, 6); 
+                    string firstH = result.Substring(0, 6);
                     string secondH = result.Substring(6);
                     string result2 = firstH + " " + secondH;
                     string result3 = result2.Replace("Chance", " Chance");
@@ -142,33 +161,61 @@ namespace webscraping_in_wpf
 
             var alert = doc.DocumentNode.SelectSingleNode("//div[@class='CurrentConditions--messaging--3rN-a']");
             string alertDay = alert.InnerText;
-            string alertFirst = alertDay.Substring(0, 5);     // this section gets the weather alert from the website and splits it separately where spaces
-            string alertSecond = alertDay.Substring(5, 5);    // should be within the string
-            string alertThird = alertDay.Substring(10, 1);    // by having them in separate strings the spaces can be added where they are needed
+            string alertFirst = alertDay.Substring(0, 5);
+            string alertSecond = alertDay.Substring(5, 5);
+            string alertThird = alertDay.Substring(10, 1);
             string alertFourth = alertDay.Substring(11);
             string result4 = alertFirst + " " + alertSecond + " " + alertThird + " " + alertFourth;
             fivedays_blk.Text += result4;
         }
 
-        private void GetAirQuality()
+        private void GetAirQuality(string linkChoice)
         {
+            string linkUse = linkChoice;
+
             WebClient client = new WebClient();
             client.Encoding = System.Text.Encoding.UTF8;
 
-            string htmlCode = client.DownloadString("https://weather.com/en-GB/weather/today/l/0ea58c060f0f6522c01d626fde93ab4bff38410da8de58c9068e373327d128e91bdb47028a98b93188526f6bdecc918c");
+            string htmlCode = client.DownloadString(linkUse);
 
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(htmlCode);
-            // using the same 5 lines of code from the other subroutine to get the html code of the main page of the website
+
             var AQI = doc.DocumentNode.SelectSingleNode("//svg[@class = 'DonutChart--donutchart--1W28b']");
             string aqi = AQI.InnerText;
-            airQual_blk.Text += "Air Quality Index: ";    // for now all that is being scraped is the "donut" which is the level of the air quality
+            airQual_blk.Text += "Air Quality Index: ";
             airQual_blk.Text += aqi;
             airQual_blk.Text += "\n";
 
             var adv = doc.DocumentNode.SelectSingleNode("//div[@class = 'AirQualityText--AirQuality--2uuF7']");
-            string advice = adv.InnerText;                // the description of the air quality and suggestions/advice are being scraped here
+            string advice = adv.InnerText;
             airQual_blk.Text += advice;
+        }
+
+        private void locChoice_Click(object sender, RoutedEventArgs e)
+        {
+            if (locSelect.SelectedItem != null)
+            {
+                wthrTdy_blk.Text = "";
+                HiLo_blk.Text = "";
+                windInfo_blk.Text = "";
+                airQual_blk.Text = "";
+                fivedays_blk.Text = "";
+
+                string userChoice = locSelect.SelectedItem.ToString();
+                string linkChoice = locDict.GetValueOrDefault(userChoice).ToString();
+
+                GetTtemp(linkChoice);
+                GetHiLoTemp(linkChoice);
+                GetWindInfo(linkChoice);
+                GetDaysFore(linkChoice);
+                GetAirQuality(linkChoice);
+            }
+
+            else
+            {
+                wthrTdy_blk.Text = "Please select a location";
+            }
         }
     }
 }
