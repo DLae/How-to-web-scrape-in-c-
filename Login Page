@@ -1,0 +1,116 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+using MySql.Data.MySqlClient;
+using System.Data;
+using System.Security.Cryptography;
+
+namespace c_sharp_to_sql_again
+{
+    /// <summary>
+    /// Interaction logic for LoginWindow.xaml
+    /// </summary>
+    
+    public partial class LoginWindow : Window
+    {
+        private string myusername;
+        private string mypassword;
+        public LoginWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void resetBtn_Click(object sender, RoutedEventArgs e)
+        {
+            ResetPasswordWindow newReset = new ResetPasswordWindow();
+            this.Close();
+            newReset.Show();
+        }
+
+        private void LoginBtn_Click(object sender, RoutedEventArgs e)
+        {
+            string conStr = "server=ND-COMPSCI;" +
+            "user=S2100357_J_Bhogal;" +
+            "database=s2100357joshwork;" +
+            "port=3306;" +
+            "password=S2100357_J_Bhogal;";
+
+            MySqlConnection connec = new MySqlConnection(conStr);
+            connec.Open();
+
+            string sql = "SELECT * FROM userinfo;";
+            MySqlCommand cmd = new MySqlCommand(sql, connec);
+            MySqlDataReader readr = cmd.ExecuteReader();
+
+            List<string> usernames = new List<string>();
+            List<string> passwords = new List<string>();
+
+            while (readr.Read())
+            {
+                usernames.Add(readr.GetString(2));
+                passwords.Add(readr.GetString(3));
+            }
+
+            string myuser = user_txt.Text;
+            string mypass = passwd_txt.Text;
+            bool found = false;
+
+            for (int i = 0; i < usernames.Count; i++)
+            {
+                if (usernames[i] == myuser)
+                {
+                    if (passwords[i] == mypass)
+                    {
+                        MessageBox.Show("Access", "Logging In");
+                        myusername = myuser;
+                        mypassword = mypass;
+                        found = true;
+                        MainWindow mainWindow = new MainWindow();
+                        this.Close();
+                        mainWindow.Show();
+                        break;
+                    }
+
+                    else
+                    {
+                        MessageBox.Show("Incorrect Password", "Denied");
+                        break;
+                    }
+                }
+            }
+            if (found == false)
+            {
+                MessageBox.Show("Incorrec Username", "Denied");
+            }
+
+
+        }
+
+        private void userclick(object sender, RoutedEventArgs e)
+        {
+            user_txt.Text = "";
+        }
+
+        private void passwdclick(object sender, RoutedEventArgs e)
+        {
+            passwd_txt.Text = "";
+        }
+
+        private void homepageBtn_Click(object sender, RoutedEventArgs e)
+        {
+            MainWindow mainWindow = new MainWindow();
+            this.Close();
+            mainWindow.Show();
+        }
+    }
+}
