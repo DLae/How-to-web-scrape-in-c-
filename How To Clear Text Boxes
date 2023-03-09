@@ -1,0 +1,5 @@
+private void FocusClick(object sender, RoutedEventArgs e)
+        {
+            TextBox tb = (TextBox)sender;
+            tb.Text = "";
+        }
