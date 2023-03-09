@@ -1,0 +1,23 @@
+using MySql.Data.MySqlClient;     // dont forget to install MySQL.Data
+
+string conStr = "server= (enter server name here);" +
+            "user=(enter username here);" +
+            "database=(enter the name of your database schema here);" +
+            "port=(enter the port of the database here);" +
+            "password=(enter your password here);";
+            
+MySqlConnection connec = new MySqlConnection(conStr);   // initialises the sql connection
+connec.Open();    // open the connection to the database
+
+string sql = "SELECT * FROM userinfo;";     // type your sql query here
+MySqlCommand cmd = new MySqlCommand(sql, connec);   // this initialises the sql command
+MySqlDataReader readr = cmd.ExecuteReader();        // this executes and reads the sql query and updates the database
+
+List<string> usernames = new List<string>();
+List<string> passwords = new List<string>();
+
+while (readr.Read())    // this while loop allows you to get a list of items from a certain column in the database, based on the sql query you entered
+{
+    usernames.Add(readr.GetString(2));
+    passwords.Add(readr.GetString(3));
+}
