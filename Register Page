@@ -1,0 +1,246 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+using System.Text.RegularExpressions;
+using MySql.Data.MySqlClient;
+
+namespace c_sharp_to_sql_again
+{
+    /// <summary>
+    /// Interaction logic for RegisterWindow.xaml
+    /// </summary>
+    public partial class RegisterWindow : Window
+    {
+
+
+        public RegisterWindow()
+        {
+            InitializeComponent();
+        }
+
+        private bool emailValid()
+        {
+            string conStr = "server=ND-COMPSCI;" +
+            "user=S2100357_J_Bhogal;" +
+            "database=s2100357joshwork;" +
+            "port=3306;" +
+            "password=S2100357_J_Bhogal;";
+
+            MySqlConnection connec = new MySqlConnection(conStr);
+            connec.Open();
+
+            string sql = "SELECT * FROM userinfo";
+            MySqlCommand cmd = new MySqlCommand(sql, connec);
+            MySqlDataReader readr = cmd.ExecuteReader();
+
+            List<string> emails = new List<string>();
+
+            while (readr.Read())
+            {
+                emails.Add(readr.GetString(4));
+            }
+
+            bool emailval = false;
+            string email = email_txt.Text;
+            string eml = @"[0-9A-Za-z.]+@+(outlook|gmail|hotmail|yahoo|googlemail)+(.com|.co.uk|.ru)";
+            string emailerror = "";
+            emailval = Regex.IsMatch(email, eml);
+            if (emailval == false)
+            {
+                skill_diff.Visibility = Visibility.Visible;
+                backgrnd.Visibility = Visibility.Hidden;
+                emailerror = "Your email is invalid\nPlease ensure your email contains an @ symbol\nYour email is a valid domain thingy eg: outlook/gmail\nYour email ends in '.com'";
+                MessageBox.Show(emailerror, "Invalid Email");
+                skill_diff.Visibility = Visibility.Hidden;
+                backgrnd.Visibility = Visibility.Visible;
+            }
+
+            else
+            {
+                for (int i = 0; i < emails.Count; i++)
+                {
+                    if (emails[i] == email)
+                    {
+                        skill_diff.Visibility = Visibility.Visible;
+                        backgrnd.Visibility = Visibility.Hidden;
+                        emailval = false;
+                        MessageBox.Show("This email already exists\nPlease use another email to continue", "Invalid Email");
+                        skill_diff.Visibility = Visibility.Hidden;
+                        backgrnd.Visibility = Visibility.Visible;
+                    }
+                }
+            }
+
+            return emailval;
+        }
+
+        private bool userValid()
+        {
+            string conStr = "server=ND-COMPSCI;" +
+            "user=S2100357_J_Bhogal;" +
+            "database=s2100357joshwork;" +
+            "port=3306;" +
+            "password=S2100357_J_Bhogal;";
+
+            MySqlConnection connec = new MySqlConnection(conStr);
+            connec.Open();
+
+            bool userval = false;
+            string username = user_txt.Text;
+            string uname = @"[0-9A-Za-z]{4,16}";
+            string usererror = "";
+            userval = Regex.IsMatch(username, uname);
+            foreach (char letter in username)
+            {
+                if (!Char.IsLetterOrDigit(letter))
+                {
+                    userval = false;
+                    break;
+                }
+            }
+
+            string sql = "SELECT * FROM userinfo";
+            MySqlCommand cmd = new MySqlCommand(sql, connec);
+            MySqlDataReader readr = cmd.ExecuteReader();
+
+            List<string> usernames = new List<string>();
+
+            while (readr.Read())
+            {
+                usernames.Add(readr.GetString(2));
+            }
+
+            for (int i = 0; i < usernames.Count; i++)
+            {
+                if (usernames[i] == username)
+                {
+                    skill_diff.Visibility = Visibility.Visible;
+                    backgrnd.Visibility = Visibility.Hidden;
+                    MessageBox.Show("Username already exists\nPlease enter another username", "Ivalid Username");
+                    userval = false;
+                    skill_diff.Visibility = Visibility.Hidden;
+                    backgrnd.Visibility = Visibility.Visible;
+                }
+            }
+            if (userval == false)
+            {
+                skill_diff.Visibility = Visibility.Visible;
+                backgrnd.Visibility = Visibility.Hidden;
+                usererror = "Your username is invalid\nPlease ensure that your username does not contain any special characters";
+                MessageBox.Show(usererror,"Invalid Username");
+                skill_diff.Visibility = Visibility.Hidden;
+                backgrnd.Visibility = Visibility.Visible;
+            }
+            connec.Close();
+            return userval;
+            
+
+        }
+
+        private bool passValid()
+        {
+            bool passval = false;
+            bool confpassval = false;
+            bool samepass = false;
+            string passcheck = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$";
+            string userpass = passwd_txt.Text;
+            string confpass = confpasswd_txt.Text;
+            passval = Regex.IsMatch(userpass, passcheck);
+            if (passval == false)
+            {
+                skill_diff.Visibility = Visibility.Visible;
+                backgrnd.Visibility = Visibility.Hidden;
+                MessageBox.Show("Your password is invalid\nPlease ensure that your password is between 8-20 characters\nYour password contains at least 1 capital letter\nYour password contains at least 1 lowercase letter\nYour password contains at least 1 special character (!, ?, £)", "Invalid Password");
+                skill_diff.Visibility = Visibility.Hidden;
+                backgrnd.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                if (userpass == confpass)
+                {
+                    samepass = true;
+                    if (samepass == true)
+                    {
+                        confpassval = true;
+                        
+                    }
+                }
+                else
+                {
+                    skill_diff.Visibility = Visibility.Visible;
+                    backgrnd.Visibility = Visibility.Hidden;
+                    MessageBox.Show("Your passwords do not match", "Error password");
+                    skill_diff.Visibility = Visibility.Hidden;
+                    backgrnd.Visibility= Visibility.Visible;
+                }
+            }
+            return confpassval;
+        }
+
+        private void boxClick(object sender, RoutedEventArgs e)
+        {
+            TextBox tb = (TextBox)sender;
+            tb.Text = "";
+        }
+
+        private void homepageBtn_Click(object sender, RoutedEventArgs e)
+        {
+            MainWindow mainWindow = new MainWindow();
+            this.Close();
+            mainWindow.Show();
+        }
+
+        private void RegisterBtn_Click(object sender, RoutedEventArgs e)
+        {
+            bool valem = emailValid();
+            skill_diff.Visibility = Visibility.Hidden;
+            backgrnd.Visibility = Visibility.Visible;
+            bool valuser = userValid();
+            skill_diff.Visibility = Visibility.Hidden;
+            backgrnd.Visibility = Visibility.Visible;
+            bool valpass = passValid();
+            skill_diff.Visibility = Visibility.Hidden;
+            backgrnd.Visibility = Visibility.Visible;
+            if (valem == true && valuser == true && valpass == true)
+            {
+                string conStr = "server=ND-COMPSCI;" +
+                "user=S2100357_J_Bhogal;" +
+                "database=s2100357joshwork;" +
+                "port=3306;" +
+                "password=S2100357_J_Bhogal;";
+
+                MySqlConnection connec = new MySqlConnection(conStr);
+                connec.Open();
+
+                string custname = custname_txt.Text;
+                string username = user_txt.Text;
+                string password = passwd_txt.Text;
+                string email = email_txt.Text;
+
+                string sql = $"INSERT INTO userinfo(custname, username, passwd, email) VALUES ('{custname}', '{username}', '{password}', '{email}');";
+                MySqlCommand cmd = new MySqlCommand(sql, connec);
+                MySqlDataReader readr = cmd.ExecuteReader();
+
+                MessageBox.Show("Account successfully created", "Success");
+
+                LoginWindow login = new LoginWindow();
+                this.Close();
+                login.Show();
+            }
+            
+
+        }
+
+        
+    }
+}
