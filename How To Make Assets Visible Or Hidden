@@ -1,0 +1,2 @@
+(insert variable name).Visibility = Visibility.Hidden;    // the variable names here are the ones that you have used for your labels
+(insert variable name).Visibility = Visibility.Visible;   // and other shit like that
