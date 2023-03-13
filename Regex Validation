@@ -1,0 +1,22 @@
+string passcheck = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$"; // this string is used for the regex validation that contains everything that a password should
+bool passval = Regex.IsMatch(userpass, passcheck);  // this boolean uses regex to check if the users password contains everything that the regex requires it to have
+if (passval == false)
+  {
+      MessageBox.Show("Your password is invalid\nPlease ensure that your password is between 8-20 characters\nYour password contains at least 1 capital letter\nYour password contains at least 1 lowercase letter\nYour password contains at least 1 special character (!, ?, £)", "Invalid Password");
+  }
+else
+  {
+      if (userpass == confpass)
+      {
+          samepass = true;
+          if (samepass == true)
+          {
+              confpassval = true;
+          }
+      }
+      else
+      {
+          MessageBox.Show("Your passwords do not match", "Error password");
+      }
+  }
+return confpassval;
