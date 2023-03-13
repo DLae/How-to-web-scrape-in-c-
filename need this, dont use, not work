@@ -1,0 +1,155 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+// the 3 items below have been used to connect to a database, to validate strings, and to encrypt passwords
+using MySql.Data.MySqlClient;
+using System.Text.RegularExpressions;
+using System.Security.Cryptography;
+
+namespace Healt_Advice_Group_program
+{
+    /// <summary>
+    /// Interaction logic for RegisterWindow.xaml
+    /// </summary>
+    public partial class RegisterWindow : Window
+    {
+        string conStr = "server= ND-COMPSCI;" +     // this connection string allows a seamless connection
+            "user=S2100357_J_Bhogal;" +             // between the database and the code
+            "database=j_bhogal_occ_spec;" +
+            "port=3306;" +
+            "password=S2100357_J_Bhogal;";
+
+        bool emailVal;
+        bool passwordVal;
+        string hashedPassword = "";
+
+        public RegisterWindow()
+        {
+            InitializeComponent();
+        }
+
+        static string EncyrptPass(string password)
+        {
+            SHA256 sha256 = SHA256.Create();
+
+            byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                sb.Append(bytes[i].ToString("x2"));
+            }
+
+            return sb.ToString();
+
+        }
+
+        private bool EmailValidate()                // this function checks the user's email address to ensure that it is a valid one
+        {
+            MySqlConnection connec = new MySqlConnection(conStr);   // initialises the sql connection
+            connec.Open();    // open the connection to the database
+
+            string emailAdd = EmailAddress_txt.Text;
+            if (emailAdd == "")                     // checks to see if the email address has been left blank or not
+            {
+                MessageBox.Show("Email address cannot be left blank", "Invalid Email");
+                emailVal = false;
+            }
+            else
+            {
+                string emailReg = @"[0-9A-Za-z.]+@+(outlook|gmail|hotmail|yahoo|googlemail)+(.com|.co.uk|.ru)";     // this string is the regex to ensure that the email entered is valid
+                emailVal = Regex.IsMatch(EmailAddress_txt.Text, emailReg);      // returns true or false to see if the input contains everything from the regex string
+                if (emailVal == false)
+                {
+                    MessageBox.Show("Please ensure you have entered a valid email address", "Invalid Email");
+                }
+            }
+
+            string sql = $"SELECT * FROM user_info WHERE user_email = '{emailAdd}'";
+            MySqlCommand cmd = new MySqlCommand(sql, connec);
+            MySqlDataReader readr = cmd.ExecuteReader();
+            MessageBox.Show(readr.Read().ToString());
+            if (readr != null)
+            {
+                MessageBox.Show("Email address is already in use\nPlease try another email address", "Invalid Email");
+                emailVal = false;
+            }
+
+            return emailVal;
+        }
+
+        private bool PasswordValidate()
+        {
+            string userPass = Password_txt.Text;
+            string userConfPass = ConfPassword_txt.Text;
+
+            if (userPass == "")
+            {
+                MessageBox.Show("Password cannot be left blank", "Invalid Password");
+                passwordVal = false;
+            }
+            else
+            {
+                if (userPass != userConfPass)
+                {
+                    MessageBox.Show("Passwords do not match", "Invalid Password");
+                    passwordVal=false;
+                }
+                else
+                {
+                    string passReg = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$";
+                    bool passwordVal = Regex.IsMatch(userPass, passReg);
+                    if (passwordVal == false)
+                    {
+                        MessageBox.Show("Invalid Password, Ensure your password contains:\nAt least 1 number\nAt least 1 capital\nAt least 1 special character\nIs between 8-20 characters");
+                    }
+                    else
+                    {
+                        hashedPassword = EncyrptPass(userPass);
+                    }
+                }
+            }
+            return passwordVal;
+        }
+
+        private void Register_btn_Click(object sender, RoutedEventArgs e)
+        {
+            emailVal = EmailValidate();
+            passwordVal = PasswordValidate();
+            if (emailVal == true && passwordVal == true)
+            {
+                MySqlConnection connec = new MySqlConnection(conStr);   // initialises the sql connection
+                connec.Open();    // open the connection to the database
+
+                string sql = $"INSERT INTO user_info(user_forename, user_surname, user_email, user_password) VALUES ({Forename_txt.Text}, {Surname_txt.Text}, {EmailAddress_txt.Text}, {hashedPassword});";     // type your sql query here
+                MySqlCommand cmd = new MySqlCommand(sql, connec);   // this initialises the sql command
+                MySqlDataReader readr = cmd.ExecuteReader();        // this executes and reads the sql query and updates the database
+                connec.Close();
+
+                MessageBox.Show("Account successfully created", "Success");
+
+                LoginWindow logwin = new LoginWindow();
+                this.Close();
+                logwin.Show();
+            }
+        }
+
+        private void Title_lbl_Click(object sender, RoutedEventArgs e)
+        {
+            MainWindow main = new MainWindow();
+            this.Close();
+            main.Show();
+        }
+    }
+}
