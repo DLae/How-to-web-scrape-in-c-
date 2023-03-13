@@ -20,3 +20,49 @@ else
       }
   }
 return confpassval;
+
+
+
+string uname = @"[0-9A-Za-z]{4,16}";    // this string and regex is used to check if a username is between 4-16 characters and doesnt contain special characters
+userval = Regex.IsMatch(username, uname);
+foreach (char letter in username)
+{
+    if (!Char.IsLetterOrDigit(letter))
+    {
+        userval = false;
+        break;
+    }
+}
+
+
+
+string eml = @"[0-9A-Za-z.]+@+(outlook|gmail|hotmail|yahoo|googlemail)+(.com|.co.uk|.ru)";    // this string is the regex used to ensure the user has entered a valid email address
+string emailerror = "";
+emailval = Regex.IsMatch(email, eml);
+if (emailval == false)
+  {
+      skill_diff.Visibility = Visibility.Visible;
+      backgrnd.Visibility = Visibility.Hidden;
+      emailerror = "Your email is invalid\nPlease ensure your email contains an @ symbol\nYour email is a valid domain thingy eg: outlook/gmail\nYour email ends in '.com'";
+      MessageBox.Show(emailerror, "Invalid Email");
+      skill_diff.Visibility = Visibility.Hidden;
+      backgrnd.Visibility = Visibility.Visible;
+  }
+
+else
+  {
+      for (int i = 0; i < emails.Count; i++)
+      {
+          if (emails[i] == email)
+          {
+              skill_diff.Visibility = Visibility.Visible;
+              backgrnd.Visibility = Visibility.Hidden;
+              emailval = false;
+              MessageBox.Show("This email already exists\nPlease use another email to continue", "Invalid Email");
+              skill_diff.Visibility = Visibility.Hidden;
+              backgrnd.Visibility = Visibility.Visible;
+          }
+      }
+  }
+
+return emailval;
