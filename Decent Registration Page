@@ -1,0 +1,216 @@
+<Button x:Name="Title_lbl" Content="Health Advice Group" HorizontalAlignment="Left" Height="44" Margin="20,20,0,0" VerticalAlignment="Top" Width="238" FontSize="25" Foreground="White" Background="Transparent" BorderBrush="{x:Null}" Click="Title_lbl_Click"/>
+<Label x:Name="Register_lbl" Content="Register Here:" HorizontalAlignment="Center" Height="44" Margin="0,78,0,0" VerticalAlignment="Top" Width="132" FontSize="20" Foreground="White" Background="Transparent"/>
+<TextBox x:Name="Forename_txt" HorizontalAlignment="Center" Height="30" Margin="0,131,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="174" FontSize="15"/>
+<TextBox x:Name="Surname_txt" HorizontalAlignment="Center" Height="30" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="174" Margin="0,176,0,0" FontSize="15"/>
+<TextBox x:Name="EmailAddress_txt" HorizontalAlignment="Center" Height="30" Margin="0,220,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="174" FontSize="15"/>
+<Label x:Name="Forename_lbl" Content="Forename:" HorizontalAlignment="Left" HorizontalContentAlignment="Right" Height="30" Margin="175,131,0,0" VerticalAlignment="Top" Width="115" FontSize="15"/>
+<Label x:Name="Surname_lbl" Content="Surname:" HorizontalAlignment="Left" HorizontalContentAlignment="Right" Height="30" Margin="175,176,0,0" VerticalAlignment="Top" Width="115" FontSize="15"/>
+<Label x:Name="Email_lbl" Content="Email Address:" HorizontalAlignment="Left" HorizontalContentAlignment="Right" Height="30" Margin="175,220,0,0" VerticalAlignment="Top" Width="115" FontSize="15"/>
+<Label x:Name="Password_lbl" Content="Password:" HorizontalAlignment="Left" HorizontalContentAlignment="Right" Height="30" Margin="175,264,0,0" VerticalAlignment="Top" Width="115" FontSize="15"/>
+<Label x:Name="ConfPassword_lbl" Content="Confirm Password:" HorizontalAlignment="Left" HorizontalContentAlignment="Right" Height="30" Margin="153,307,0,0" VerticalAlignment="Top" Width="137" FontSize="15"/>
+<Button x:Name="CreateAcc_btn" Content="Create Account" HorizontalAlignment="Center" Height="46" Margin="0,359,0,0" VerticalAlignment="Top" Width="108" Background="White" BorderBrush="{x:Null}" Click="Register_btn_Click" FontSize="14"/>
+<PasswordBox x:Name="Password_pass" HorizontalAlignment="Center" Height="30" Margin="0,264,0,0" VerticalAlignment="Top" Width="174"/>
+<PasswordBox x:Name="ConfPass_pass" HorizontalAlignment="Center" Height="30" Margin="0,307,0,0" VerticalAlignment="Top" Width="174"/>
+<Button x:Name="showPass_btn" Content="Show Password" HorizontalAlignment="Left" Height="30" Margin="524,264,0,0" VerticalAlignment="Top" Width="91" Click="showPass_btn_Click"/>
+<TextBox x:Name="UserPass_txt" Text="" HorizontalAlignment="Center" Height="30" Margin="0,264,0,0" VerticalAlignment="Top" Width="174" Background="White" Visibility="Hidden"/>
+<TextBox x:Name="UserConfPass_txt" Text="" HorizontalAlignment="Center" Height="30" Margin="0,307,0,0" VerticalAlignment="Top" Width="174" Background="White" Visibility="Hidden"/>
+<Button x:Name="hidePass_btn" Content="Hide Password" HorizontalAlignment="Left" Height="30" Margin="524,264,0,0" VerticalAlignment="Top" Width="91" Click="hidePass_btn_Click" Visibility="Hidden"/>
+
+
+^that is the xaml code if you need it^
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+// the 3 items below have been used to connect to a database, to validate strings, and to encrypt passwords
+using MySql.Data.MySqlClient;
+using System.Text.RegularExpressions;
+using System.Security.Cryptography;
+
+namespace Healt_Advice_Group_program
+{
+    /// <summary>
+    /// Interaction logic for RegisterWindow.xaml
+    /// </summary>
+    public partial class RegisterWindow : Window
+    {
+        string conStr = "server= ND-COMPSCI;" +     // this connection string allows a seamless connection
+            "user=S2100357_J_Bhogal;" +             // between the database and the code
+            "database=j_bhogal_occ_spec;" +
+            "port=3306;" +
+            "password=S2100357_J_Bhogal;";
+
+        bool emailVal;              // creating variables here that can be used all
+        bool passwordVal;           // throughout this section of the code
+        string hashedPassword = "";
+
+        public RegisterWindow()
+        {
+            InitializeComponent();
+            hidePass_btn.IsEnabled = false;
+        }
+
+        static string EncryptPass(string password)      // this function encrypts the users password once the register button has been clicked
+        {
+            SHA256 sha256 = SHA256.Create();
+
+            byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                sb.Append(bytes[i].ToString("x2"));
+            }
+
+            return sb.ToString();           // this line returns the encrypted password so that it can be added to the database
+
+        }
+
+        private bool EmailValidate()                // this function checks the user's email address to ensure that it is a valid one
+        {
+            MySqlConnection connec = new MySqlConnection(conStr);   // initialises the sql connection
+            connec.Open();    // open the connection to the database
+
+            string emailAdd = EmailAddress_txt.Text;
+            if (emailAdd == "")                     // checks to see if the email address has been left blank or not
+            {
+                MessageBox.Show("Email address cannot be left blank", "Invalid Email");
+                emailVal = false;
+            }
+            else
+            {
+                string emailReg = @"[0-9A-Za-z.]+@+(outlook|gmail|hotmail|yahoo|googlemail)+(.com|.co.uk|.ru)";     // this string is the regex to ensure that the email entered is valid
+                emailVal = Regex.IsMatch(EmailAddress_txt.Text, emailReg);      // returns true or false to see if the input contains everything from the regex string
+                if (emailVal == false)
+                {
+                    MessageBox.Show("Please ensure you have entered a valid email address", "Invalid Email");
+                }
+            }
+
+            string sql = $"SELECT * FROM user_info WHERE user_email = '{emailAdd}'";
+            MySqlCommand cmd = new MySqlCommand(sql, connec);
+            MySqlDataReader readr = cmd.ExecuteReader();            // this section is used to ensure that the email address being entered isnt already in use
+            //MessageBox.Show(readr.Read().ToString());             if it is then the user will be notified and prompted to enter a different email address
+            if (readr.Read().ToString() != "False")
+            {
+                MessageBox.Show("Email address is already in use\nPlease try another email address", "Invalid Email");
+                emailVal = false;
+            }
+
+            return emailVal;
+        }
+
+        private bool PasswordValidate()     // this function checks to ensure that the password is strong enough
+        {
+            string userPass = Password_pass.Password;       // the code now makes use of password boxes instead for extra security
+            string userConfPass = ConfPass_pass.Password;
+
+            if (userPass == "")     // this if condition checks to see if the user has left the password box blank
+            {
+                MessageBox.Show("Password cannot be left blank", "Invalid Password");
+                passwordVal = false;
+            }
+            else
+            {
+                if (userPass != userConfPass)   // this if condition checks if the 2 passwords that the user has entered match or not
+                {
+                    MessageBox.Show("Passwords do not match", "Invalid Password");
+                    passwordVal=false;
+                }
+                else
+                {
+                    string passReg = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,20}$";   // if the passwords match then regex is used to check if the password is strong enough
+                    bool passwordVal = Regex.IsMatch(userPass, passReg);
+                    if (passwordVal == false)   // if the regex returns false then the user is notified that the password needs to be stronger
+                    {
+                        MessageBox.Show("Ensure your password contains:\nAt least 1 number\nAt least 1 capital\nAt least 1 special character\nIs between 8-20 characters", "Invalid Password");
+                    }
+                    else
+                    {
+                        hashedPassword = EncryptPass(userPass); // if the user has a strong password then it encrypts the password and returns it as a hashed version
+                        return passwordVal;     // it then returns passwordVal as true
+                    }
+                }
+            }
+            return passwordVal;
+        }
+
+        private void Register_btn_Click(object sender, RoutedEventArgs e)
+        {
+            emailVal = EmailValidate(); // these lines run the 2 functions to check
+            passwordVal = PasswordValidate();   // the email address and password
+            //MessageBox.Show(emailVal.ToString());
+            //MessageBox.Show(passwordVal.ToString());
+            if (emailVal == true && passwordVal == true)
+            {
+                MySqlConnection connec = new MySqlConnection(conStr);   // initialises the sql connection
+                connec.Open();    // open the connection to the database
+
+                string sql = $"INSERT INTO user_info(user_forename, user_surname, user_email, user_password) VALUES ('{Forename_txt.Text}', '{Surname_txt.Text}', '{EmailAddress_txt.Text}', '{hashedPassword}');";
+                MySqlCommand cmd = new MySqlCommand(sql, connec);   // this initialises the sql command
+                MySqlDataReader readr = cmd.ExecuteReader();        // this executes and reads the sql query and updates the database
+                connec.Close();
+
+                MessageBox.Show("Account successfully created", "Success");
+
+                LoginWindow logwin = new LoginWindow();
+                this.Close();
+                logwin.Show();
+            }
+        }
+
+        private void Title_lbl_Click(object sender, RoutedEventArgs e)
+        {
+            MainWindow main = new MainWindow();
+            this.Close();
+            main.Show();
+        }
+
+        private void showPass_btn_Click(object sender, RoutedEventArgs e)
+        {
+            showPass_btn.Visibility = Visibility.Hidden;
+            showPass_btn.IsEnabled = false;
+
+            UserPass_txt.Text = Password_pass.Password;      // makes the content of the hidden labels
+            UserConfPass_txt.Text = ConfPass_pass.Password;  // equal to the users password within the password boxes
+
+            Password_pass.Visibility = Visibility.Hidden;       // hides the password boxes
+            ConfPass_pass.Visibility = Visibility.Hidden;
+
+            UserPass_txt.Visibility = Visibility.Visible;       // makes the labels with the password visible
+            UserConfPass_txt.Visibility = Visibility.Visible;
+
+            hidePass_btn.Visibility = Visibility.Visible;
+            hidePass_btn.IsEnabled = true;
+        }
+
+        private void hidePass_btn_Click(object sender, RoutedEventArgs e)
+        {
+            hidePass_btn.Visibility = Visibility.Hidden;
+            hidePass_btn.IsEnabled = false;
+
+            Password_pass.Password = UserPass_txt.Text;      // makes the content of the hidden labels
+            ConfPass_pass.Password = UserConfPass_txt.Text;  // equal to the users password within the password boxes
+
+            Password_pass.Visibility = Visibility.Visible;       // reveals the password boxes
+            ConfPass_pass.Visibility = Visibility.Visible;
+
+            UserPass_txt.Visibility = Visibility.Hidden;       // makes the labels with the password hidden
+            UserConfPass_txt.Visibility = Visibility.Hidden;
+
+            showPass_btn.Visibility= Visibility.Visible;
+            showPass_btn.IsEnabled = true;
+        }
+    }
+}
