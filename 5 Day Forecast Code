@@ -1,0 +1,44 @@
+private void fiveDayForecast(string linkChoice) // this function gets the 5 day forecast for the location
+        {
+            string linkUse = linkChoice;
+
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+
+            string htmlCode = client.DownloadString(linkUse);   // getting the html code from the website
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(htmlCode); // loading the html code so that it can be used to scrape data from
+
+            var fivedays = doc.DocumentNode.SelectSingleNode("//div[@class='DailyWeatherCard--TableWrapper--2bB37']");  // gets the table with the quick 5 day forecast
+            string fdaystemp = fivedays.InnerText;
+            string fdays = fdaystemp.Replace("%", "%\n").Replace("°", "° ");    // adds new lines and spaces to make it look more aethstetically pleasing
+            string[] test = fdays.Split("\n");  // gets a list of string split by the new line character
+
+            for (int i = 0; i < 5; i++)
+            {
+                int start = test[i].LastIndexOf("°") + "°".Length;
+                int end = test[i].IndexOf("Chance", start);
+                string result = test[i].Remove(start, end - start).Replace("Rain", "Rain ");
+                string placeholder = result.Substring(0, 5);    // this little section removes the overall condition for the day
+
+                if (placeholder == "Today") // placeholder here is to ensure that the word today is used
+                {
+                    string result2 = result.Replace("Today", "Today ");     // after the word today a space is added
+                    string result3 = result2.Replace("Chance", " Chance");
+                    FiveDF_blk.Text += result3;
+                    FiveDF_blk.Text += "\n";
+                    FiveDF_blk.Text += "\n";
+                }
+                else
+                {
+                    string firstH = result.Substring(0, 6);
+                    string secondH = result.Substring(6);
+                    string result2 = firstH + " " + secondH;    // adds a space between the day and date as its in the for
+                    string result3 = result2.Replace("Chance", " Chance");  // Mon 20
+                    FiveDF_blk.Text += result3;
+                    FiveDF_blk.Text += "\n";
+                    FiveDF_blk.Text += "\n";
+                }
+            }
+        }
