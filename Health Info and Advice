@@ -1,0 +1,112 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+// the next 3 using statements are used in order to web scrape efficiently
+using System.Net;
+using System.Text.RegularExpressions;
+using HtmlAgilityPack;
+
+
+namespace Healt_Advice_Group_program
+{
+    /// <summary>
+    /// Interaction logic for HealthWeatherWindow.xaml
+    /// </summary>
+    public partial class HealthWeatherWindow : Window
+    {
+        public HealthWeatherWindow(string healthLink)
+        {
+            InitializeComponent();
+            GetPollenBreakDown(healthLink);
+            GetHealthAdvice(healthLink);
+        }
+
+        private void GetPollenBreakDown(string healthLink)  // gets the 3 types of pollen in the area
+        {
+            HtmlWeb web = new HtmlWeb();
+            HtmlDocument doc = web.Load(healthLink);
+
+            var PBTables = doc.DocumentNode.SelectNodes("//li[@class='PollenBreakdown--outlookLevel--2rf6z']"); // finds the severity of pollen levels
+
+            List<string> PollenInfo = new List<string>();
+
+            foreach (var item in PBTables)
+            {
+                PollenInfo.Add(item.InnerText); // adds the severity to a list
+            }
+
+            TreePoll_blk.Text += $"Tree Pollen:\n\n{PollenInfo[0]}\n{PollenInfo[1]}\n{PollenInfo[2]}";    // outputs the information in the text
+            GrassPoll_blk.Text += $"Grass Pollen:\n\n{PollenInfo[3]}\n{PollenInfo[4]}\n{PollenInfo[5]}";    // block that they are associated with
+            RWeedPoll_blk.Text += $"Ragweed Pollen:\n\n{PollenInfo[6]}\n{PollenInfo[7]}\n{PollenInfo[8]}";
+
+            var PBLevels = doc.DocumentNode.SelectNodes("//li[@class='PollenBreakdown--level--3A7e1']");    // gets every pollen level
+
+            List<string> Levels = new List<string>();
+
+            foreach (var level in PBLevels)
+            {
+                Levels.Add(level.InnerText);    // adds each pollen level to a list
+            }
+
+            PollenLevels_blk.Text += $"Pollen Levels:";
+
+            foreach (string lvl in Levels)  // displays each pollen level to the user within the 4th text block that is seen by the user
+            {
+                PollenLevels_blk.Text += $"\n{lvl}";
+            }
+        }
+
+        private void GetHealthAdvice(string healthLink)
+        {
+            HtmlWeb web = new HtmlWeb();
+            HtmlDocument doc = web.Load(healthLink);
+
+            var healthAdvice = doc.DocumentNode.SelectNodes("//div[@class='AllergyManager--tipWrapper--3dPbN']"); // gets advice for the user
+
+            List<string> advice = new List<string>();
+
+            foreach (var item in healthAdvice)
+            {
+                advice.Add(item.InnerText);     // adds each piece of advice to a list
+            }
+
+            foreach (string adv in advice)
+            {
+                healthTips_blk.Text += $"{adv}\n\n";  // outputs the advice to the user
+            }
+        }
+
+
+
+        private void Title_btn_Click(object sender, RoutedEventArgs e)
+        {
+            HomeWindow homepage = new HomeWindow();
+            this.Close();
+            homepage.Show();
+        }
+
+        private void Account_btn_Click(object sender, RoutedEventArgs e)
+        {
+            AccountWindow account = new AccountWindow();
+            this.Close();
+            account.Show();
+        }
+
+        private void Settings_btn_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsWindow setting = new SettingsWindow();
+            this.Close();
+            setting.Show();
+        }
+    }
+}
