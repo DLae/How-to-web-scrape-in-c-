@@ -1,0 +1,17 @@
+private void GetTtemp(string linkChoice)    // getting todays temperature
+        {   
+            string linkUse = linkChoice;    // link is based off of the users search choice
+
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+
+            string htmlCode = client.DownloadString(linkUse);   // getting the html code from the website
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(htmlCode); // loading the html code so that it can be used to scrape data from
+
+            var temperature = doc.DocumentNode.SelectSingleNode("//span[@class='CurrentConditions--tempValue--MHmYY']");    // getting the temperature for today
+            var location = doc.DocumentNode.SelectSingleNode("//h1[@class='CurrentConditions--location--1YWj_']");          // getting a the location i.e Leeds, England
+
+            TodayForecast_blk.Text = $"The temperature in {location.InnerText} is {temperature.InnerText}C";
+        }
