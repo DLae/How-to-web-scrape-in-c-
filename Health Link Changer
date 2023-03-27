@@ -1,0 +1,55 @@
+private void Search_btn_Click(object sender, RoutedEventArgs e)
+        {
+            if (LocationSelect_cmbx.SelectedItem != null)   // checks to see if the combo box has been left null or now
+            {
+                TodayForecast_blk.Text = "";    // clears the box so forecasts dont over lap
+                FiveDF_blk.Text = "";
+                AirQuality_blk.Text = "";
+                Health_blk.Text = "";
+
+                string userChoice = LocationSelect_cmbx.SelectedItem.ToString();    // gets the users choice of location from the combo box
+                string linkChoice = locationDict.GetValueOrDefault(userChoice).ToString();  // gets the link based on the users choice
+
+                GetTtemp(linkChoice);
+                GetWeathCond(linkChoice);   // adds each piece of information to the today forecast box
+                GetHiLoTemp(linkChoice);
+                GetFeelsLike(linkChoice);
+                GetWindSpeed(linkChoice);
+                GetWeathAlert(linkChoice);
+
+                fiveDayForecast(linkChoice);    // adds the five day forecast
+
+                GetAirQuality(linkChoice);      // gets the air quality of the location
+
+                GetHealthForecast(linkChoice);  // gets the health advice based on the choice
+
+                AQInfo_btn.IsEnabled = true;    // enables the more information buttons
+                HealthAdvice_btn.IsEnabled = true;
+
+                string firstPartLink = linkChoice.Substring(0, 26);
+                string secondPartLink = linkChoice.Substring(26).Replace("weather", "forecast");
+                string newLink = firstPartLink + secondPartLink;    // replaces the second instance of the word weather with forecast
+                airQualLink = newLink.Replace("today", "air-quality");
+                // the line above uses the link based on the user choice and replace certain parts of the link so that the air quality page can be found and used
+                healthAdvLink = newLink.Replace("today", "allergy");
+                // the line above uses the link based on the user choice and replace certain parts of the link so that the health page can be found and used
+            }
+
+            else
+            {
+                TodayForecast_blk.Text = "Please select a location";
+            }
+        }
+        
+        
+        
+        // Lines 1-42 are for the home page, you need to focus on
+        // lines 29-35 for the health link changer
+        
+         public HealthWeatherWindow(string healthLink)
+        {
+            InitializeComponent();
+            GetPollenBreakDown(healthLink);
+            GetHealthAdvice(healthLink);
+        }
+        // health link is then used in the health advice window
