@@ -16,6 +16,9 @@ using System.Net;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 
+// know that airQualLink is this https://weather.com/en-GB/forecast/air-quality/l/
+// plus the location string at the end
+
 namespace Healt_Advice_Group_program
 {
     /// <summary>
