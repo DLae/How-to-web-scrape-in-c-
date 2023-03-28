@@ -1,0 +1,134 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+// the next 3 using statements are used in order to web scrape efficiently
+using System.Net;
+using System.Text.RegularExpressions;
+using HtmlAgilityPack;
+
+namespace Healt_Advice_Group_program
+{
+    /// <summary>
+    /// Interaction logic for AirQualWindow.xaml
+    /// </summary>
+    public partial class AirQualWindow : Window
+    {
+        string userLink;
+        public AirQualWindow(string airQualLink, string userLink)
+        {
+            InitializeComponent();
+            GetAirQual(airQualLink);
+            GetMainPollutant(airQualLink);  // runs the functions to get
+            GetAllPollutants(airQualLink);  // the required data
+            this.userLink = userLink;
+        }
+
+        private void GetAirQual(string airQualLink)
+        {
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+
+            string htmlCode = client.DownloadString(airQualLink);   // downloads the html code
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(htmlCode);
+
+            var heading = doc.DocumentNode.SelectSingleNode("//h1[@class='LocationPageTitle--PageHeader--JBu5- Card--cardHeader--3NRFf']");
+            string title = heading.InnerText;  // gets the heading for the location so the user knows whats going on
+            AirQual_blk.Text = title.Replace("&#x27;s", "'s");
+
+            var qualityIndex = doc.DocumentNode.SelectSingleNode("//svg[@class='DonutChart--donutchart--1W28b']");  // gets the index value of the air quality
+            string quality = qualityIndex.InnerText;
+
+            AirQual_blk.Text += $"\n\nAQI: {quality}";    // adds the integer value to the display
+
+            var qualitySeverity = doc.DocumentNode.SelectSingleNode("//span[@class='AirQualityText--severity--1smy9 AirQuality--extendedDialCategotyText--1N2Nz']");
+            var qualityDesc = doc.DocumentNode.SelectSingleNode("//p[@class='AirQualityText--severityText--1wSKp AirQuality--extendedDialSeverityText--1Gx5j']");
+            string severity = qualitySeverity.InnerText;    // gets the severity of the air quality and displays
+            string description = qualityDesc.InnerText;     // gets the advice on what to do and displays
+
+            AirQual_blk.Text += $"\n\n{severity}:\n{description}";
+        }
+
+        private void GetMainPollutant(string airQualLink)
+        {
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+
+            string htmlCode = client.DownloadString(airQualLink);   // downloads the html code
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(htmlCode);
+
+            var MPHeading = doc.DocumentNode.SelectSingleNode("//h3[@class='AirQuality--pollutantHeading--2KRps']");
+            var MPName = doc.DocumentNode.SelectSingleNode("//span[@class='AirQuality--pollutantName--3SjhF']");
+            string mainPHeader = MPHeading.InnerText;   // gets the header Primary Pollutant
+            string mainPName = MPName.InnerText;    // gets the primary pollutant name
+
+            AirQual_blk.Text += $"\n\n{mainPHeader}:\n{mainPName}";
+        }
+
+        private void GetAllPollutants(string airQualLink)
+        {
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+
+            string htmlCode = client.DownloadString(airQualLink);   // downloads the html code
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(htmlCode);
+
+            var allPol = doc.DocumentNode.SelectSingleNode("//div[@class='AirQuality--allPollutantDials--2h_JC AirQuality--isOdd--2FQ4S']");
+            string allPollutants = allPol.InnerText;    // gets all pollutants within the location that the user has selected
+
+            allPollutants = allPollutants.Replace("m3", "m3\n");    // adds a new line character after each pollutant
+            string[] pollutants = allPollutants.Split("\n");    // splits the pollutants into their own string
+
+            foreach (string pollutant in pollutants)
+            {
+                if (pollutant != "")
+                {
+                    string level = pollutant.Substring(0, 1);   // gets the integer of each pollutant level
+                    string name = pollutant.Substring(1);   // rest of the pollutant data
+
+                    string pollutantName = level + " " + name;  // adds a space in between the integer and the name
+                    string pollutantDesc = pollutantName.Replace(")", ")\n").Replace("m3","m3\n\n");  // adds a new line character after every close bracket and m3
+
+                    AirQualMI_blk.Text += $"{pollutantDesc}"; // adds it to the display
+                }
+                
+            }
+        }
+
+        private void Title_btn_Click(object sender, RoutedEventArgs e)
+        {
+            HomeWindow homepage = new HomeWindow();
+            this.Close();
+            homepage.Show();
+        }
+
+        private void Account_btn_Click(object sender, RoutedEventArgs e)
+        {
+            AccountWindow account = new AccountWindow(userLink);
+            this.Close();
+            account.Show();
+        }
+
+        private void Settings_btn_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsWindow setting = new SettingsWindow(userLink);
+            this.Close();
+            setting.Show();
+        }
+    }
+}
