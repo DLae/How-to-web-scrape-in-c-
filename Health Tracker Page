@@ -1,0 +1,237 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+// the next 3 using statements are used in order to web scrape efficiently
+using System.Net;
+using HtmlAgilityPack;
+using MySql.Data.MySqlClient;
+
+namespace Healt_Advice_Group_program
+{
+    /// <summary>
+    /// Interaction logic for AccountWindow.xaml
+    /// </summary>
+    public partial class AccountWindow : Window
+    {
+        double weight;
+        double height;
+        int age;
+        double bmi;
+        private string userLoc;
+        bool bmiVal;
+        int userid;
+        string userForename = "";
+
+        string conStr = "server= ND-COMPSCI;" +     // this connection string allows a seamless connection
+            "user=S2100357_J_Bhogal;" +             // between the database and the code
+            "database=j_bhogal_occ_spec;" +
+            "port=3306;" +
+            "password=S2100357_J_Bhogal;";
+
+
+        public AccountWindow(string lastLocLink, int userid)
+        {
+            InitializeComponent();
+            this.userLoc = lastLocLink;
+            if (userLoc != "")  // checks to ensure that the link is valid
+            {
+                GetTtemp(userLoc);
+                GetWeathCond(userLoc);  // runs the functions to get
+                GetHiLoTemp(userLoc);   // the information needed
+                GetFeelsLike(userLoc);
+            }
+            else
+            {
+                RecentLoc_blk.Text = "No information found";
+            }
+
+            this.userid = userid;
+
+            MySqlConnection connec = new MySqlConnection(conStr);   // initialises the sql connection
+            connec.Open();    // open the connection to the database
+
+            string sql = $"SELECT user_forename FROM user_info WHERE user_id = '{userid}';";     // this statement finds the users forename within the database
+            MySqlCommand cmd = new MySqlCommand(sql, connec);
+            MySqlDataReader readr = cmd.ExecuteReader();
+
+            while(readr.Read())
+            {
+                userForename = readr.GetString(0);      // gets the users forename
+            }
+            UserWelcome_lbl.Content += $" {userForename}";  // displays it after the welcome
+            connec.Close();
+
+        }
+
+        private void GetUserBMI()
+        {
+            try
+            {
+                age = int.Parse(UserAge_txt.Text);
+                bmiVal = true;
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Invalid Age Input", "Error");
+                bmiVal = false;
+            }
+
+            try
+            {
+                weight = double.Parse(UserWeight_txt.Text); // attempts to change the user input to a double
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Invalid Weight Input", "Error");
+                bmiVal = false;
+            }
+
+            try
+            {
+                height = double.Parse(UserHeight_txt.Text);// attempts to change the user input to a double
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Invalid Height Input", "Error");
+                bmiVal = false;
+            }
+
+            bmi = weight / Math.Pow(height / 100.0, 2);    // finds the bmi by weight / height^2
+        }
+
+        private void GetBMIClass()
+        {
+            if (bmi < 18.0)    // checks the bmi range
+            {
+                bmiOut_blk.Text = $"Your BMI is {Math.Round(bmi,2)}\nYou are underweight\nPlease eat more\nConsult your GP for more advice on how to improve your bmi";
+            }
+            if (bmi >= 18.0 && bmi <= 24.9)   // outputs a suitable message based on the scores
+            {
+                bmiOut_blk.Text = $"Your BMI is {Math.Round(bmi, 2)}\nYou are healthy";
+            }
+            if (bmi >= 25) 
+            {
+                bmiOut_blk.Text = $"Your BMI is {Math.Round(bmi, 2)}\nYou are overweight\nPlease consult your GP for advice on how to improve your bmi";
+            }
+        }
+
+        private void GetTtemp(string linkChoice)    // getting todays temperature
+        {
+            string linkUse = linkChoice;    // link is based off of the users search choice
+
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+
+            string htmlCode = client.DownloadString(linkUse);   // getting the html code from the website
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(htmlCode); // loading the html code so that it can be used to scrape data from
+
+            var temperature = doc.DocumentNode.SelectSingleNode("//span[@class='CurrentConditions--tempValue--MHmYY']");    // getting the temperature for today
+            var location = doc.DocumentNode.SelectSingleNode("//h1[@class='CurrentConditions--location--1YWj_']");          // getting a the location i.e Leeds, England
+
+            RecentLoc_blk.Text = $"The temperature in {location.InnerText} is {temperature.InnerText}C";
+        }
+         
+        private void GetWeathCond(string linkChoice)    // gets the current weather condition for the location
+        {
+            string linkUse = linkChoice;
+
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+
+            string htmlCode = client.DownloadString(linkUse);   // getting the html code from the website
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(htmlCode); // loading the html code so that it can be used to scrape data from
+
+            var currentCond = doc.DocumentNode.SelectSingleNode("//div[@class='CurrentConditions--phraseValue--mZC_p']");
+
+            RecentLoc_blk.Text += $"\n\nCurrent Conditions: {currentCond.InnerText}";
+        }
+
+        private void GetHiLoTemp(string linkChoice)     // gets the highest and lowest temperatures for the day
+        {
+            string linkUse = linkChoice;
+
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+
+            string htmlCode = client.DownloadString(linkUse);
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(htmlCode);
+
+            var bothtemps = doc.DocumentNode.SelectSingleNode("//div[@class='WeatherDetailsListItem--wxData--kK35q']");
+            string temp = bothtemps.InnerText;
+            string lowtemp = temp.Substring(temp.Length - 3);
+            if (lowtemp[0].ToString() == "/")   // checks to see if the first character of the lowest temp
+            {                                   // is a /, if it is then it is replaced with a blank space
+                lowtemp = lowtemp.Replace("/", "");
+            }
+            string hightemp = temp.Substring(0, 2);
+            if (hightemp[1].ToString() == "°")
+            {
+                hightemp = hightemp.Replace("°", "");
+            }
+
+            RecentLoc_blk.Text += $"\n\nHigh: {hightemp}°C     Low: {lowtemp}C";
+        }
+
+        private void GetFeelsLike(string linkChoice)    // gets the current feeling like temperature
+        {
+            string linkUse = linkChoice;
+
+            WebClient client = new WebClient();
+            client.Encoding = System.Text.Encoding.UTF8;
+
+            string htmlCode = client.DownloadString(linkUse);   // getting the html code from the website
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(htmlCode); // loading the html code so that it can be used to scrape data from
+
+            var feelsLike = doc.DocumentNode.SelectSingleNode("//span[@class='TodayDetailsCard--feelsLikeTempValue--2icPt']");
+
+            RecentLoc_blk.Text += $"\n\nCurrently Feels like: {feelsLike.InnerText}C";
+        }
+
+        private void Title_btn_Click(object sender, RoutedEventArgs e)
+        {
+            HomeWindow homepage = new HomeWindow(userid);
+            this.Close();
+            homepage.Show();
+        }
+
+        private void Settings_btn_Click(object sender, RoutedEventArgs e)
+        {
+            SettingsWindow setting = new SettingsWindow(userLoc, userid);
+            this.Close();
+            setting.Show();
+        }
+
+        private void PHT_btn_Click(object sender, RoutedEventArgs e)
+        {
+            GetUserBMI();
+            if (bmiVal)
+            {
+                GetBMIClass();
+            }
+        }
+
+        private void box_Focus(object sender, RoutedEventArgs e)
+        {
+            TextBox tb = (TextBox)sender;   // clears the text box that the user clicks on
+            tb.Text = "";
+        }
+    }
+}
