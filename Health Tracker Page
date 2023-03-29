@@ -32,11 +32,11 @@ namespace Healt_Advice_Group_program
         int userid;
         string userForename = "";
 
-        string conStr = "server= ND-COMPSCI;" +     // this connection string allows a seamless connection
-            "user=S2100357_J_Bhogal;" +             // between the database and the code
-            "database=j_bhogal_occ_spec;" +
-            "port=3306;" +
-            "password=S2100357_J_Bhogal;";
+        string conStr = "server= ;" +     // this connection string allows a seamless connection
+            "user=;" +             // between the database and the code
+            "database=;" +
+            "port=;" +
+            "password=;";
 
 
         public AccountWindow(string lastLocLink, int userid)
